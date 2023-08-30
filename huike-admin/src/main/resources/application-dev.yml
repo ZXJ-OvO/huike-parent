@@ -1,0 +1,24 @@
+# 项目相关配置
+huike:
+  name: HuiKe # 名称
+  version: 3.4.0 # 版本
+  copyrightYear: 2021 # 版权年份
+  demoEnabled: true # 实例演示开关
+  profile: E:\soft\uploadPath
+  addressEnabled: false # 获取ip地址开关
+  captchaType: math # 验证码类型 math: 数字计算,  char: 字符验证
+
+# token配置
+token:
+  header: Authorization # 令牌自定义标识
+  secret: abcdefghijklmnopqrstuvwxyz # 令牌密钥
+  expireTime: 30 # 令牌有效期（默认30分钟）
+
+
+
+#admin策略 导入和转换全部交由admin来处理，由admin来分配线索和规则
+#rule策略 交由规则引擎来处理，项目一阶段不处理，单讲admin模式
+rule:
+  transfor: admin #转商机时的自动分配方式--rule: 基于规则来分片 admin: 先分配给管理员再进行二次分配
+  clue:
+    import: admin #导入时的自动分配方式--rule: 基于规则来分片 admin: 先分配给管理员再进行二次分配
