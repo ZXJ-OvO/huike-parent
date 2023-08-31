@@ -2,6 +2,7 @@ package com.huike.config;
 
 import com.huike.common.config.HuiKeConfig;
 import com.huike.common.constant.Constants;
+import com.huike.interceptor.JwtTokenAdminInterceptor;
 import com.huike.interceptor.RepeatSubmitInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,15 +20,21 @@ import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 
+import javax.annotation.Resource;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     @Autowired
     private RepeatSubmitInterceptor repeatSubmitInterceptor;
+    @Resource
+    private JwtTokenAdminInterceptor jwtTokenAdminInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(repeatSubmitInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(jwtTokenAdminInterceptor).addPathPatterns("/**")
+                .excludePathPatterns("/login").excludePathPatterns("/captchaImage");;
     }
 
 

@@ -1,6 +1,7 @@
 package com.huike.controller.common;
 
 import com.google.code.kaptcha.Producer;
+import com.huike.common.annotation.LimitAccess;
 import com.huike.common.constant.Constants;
 import com.huike.domain.common.AjaxResult;
 import com.huike.utils.redis.RedisCache;
@@ -39,7 +40,6 @@ public class CaptchaController {
     @Value("${huike.captchaType}")
     private String captchaType;
 
-
     @Autowired
     private RedisCache redisCache;
 
@@ -48,6 +48,7 @@ public class CaptchaController {
      */
     @ApiOperation("验证码-生成")
     @GetMapping("/captchaImage")
+    @LimitAccess(count = "5", time = "60")
     public AjaxResult getCode(HttpServletResponse response) throws IOException {
         // 保存验证码信息
         String uuid = IdUtils.simpleUUID();

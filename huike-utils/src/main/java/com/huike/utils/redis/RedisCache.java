@@ -207,4 +207,8 @@ public class RedisCache {
     public Collection<String> keys(final String pattern) {
         return redisTemplate.keys(pattern);
     }
+
+    public void increment(String name, int i) {
+        redisTemplate.opsForValue().increment(name, i);
+    }
 }
