@@ -64,6 +64,13 @@ public class RedisCache {
         return redisTemplate.expire(key, timeout, unit);
     }
 
+    public Long getExpire(final String key) {
+        return redisTemplate.getExpire(key);
+    }
+
+    public Long increment(final String key, final long date) {
+        return redisTemplate.opsForValue().increment(key, date);
+    }
     /**
      * 获得缓存的基本对象。
      *
@@ -208,7 +215,7 @@ public class RedisCache {
         return redisTemplate.keys(pattern);
     }
 
-    public void increment(String name, int i) {
-        redisTemplate.opsForValue().increment(name, i);
+    public Object getCacheValue(String toString) {
+        return redisTemplate.opsForValue().get(toString);
     }
 }

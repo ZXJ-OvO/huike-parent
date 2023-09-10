@@ -22,3 +22,19 @@ rule:
   transfor: admin #转商机时的自动分配方式--rule: 基于规则来分片 admin: 先分配给管理员再进行二次分配
   clue:
     import: admin #导入时的自动分配方式--rule: 基于规则来分片 admin: 先分配给管理员再进行二次分配
+
+
+
+#minio:
+#  endpoint: http://127.0.0.1:9090 #Minio服务所在地址
+#  bucketName: sky-take-out #存储桶名称
+#  accessKey: Mkq2NvS3ijP2rVyNiNPT #访问的key
+#  secretKey: HPA2hP289vNst7jUA8fALib1ydgOxWpi8kyowncf #访问的秘钥
+
+storage:
+  type: minio
+  minio:
+    endpoint: http://127.0.0.1:9090 # Minio服务所在地址
+    bucketName: sky-take-out # 存储桶名称
+    accessKey: Mkq2NvS3ijP2rVyNiNPT # 访问的key
+    secretKey: HPA2hP289vNst7jUA8fALib1ydgOxWpi8kyowncf # 访问的秘钥

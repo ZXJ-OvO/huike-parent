@@ -33,7 +33,9 @@ public class LimitAspect {
         LimitAccess annotation = signature.getMethod().getAnnotation(LimitAccess.class);
         String count = annotation.count();
         String time = annotation.time();
-        String name = "limit:access" + joinPoint.getTarget().getClass().getName() + ":" + signature.getMethod().getName();
+        String name = "limit:access" + joinPoint.getTarget().getClass().getName() +
+                ":" +
+                signature.getMethod().getName();
 
         Integer c = redisCache.getCacheObject(name);
         if (c == null) {

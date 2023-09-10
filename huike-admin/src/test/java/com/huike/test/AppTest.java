@@ -1,8 +1,8 @@
 package com.huike.test;
 
+import cn.hutool.crypto.digest.BCrypt;
 import com.huike.utils.BcryptUtils;
 import org.junit.jupiter.api.Test;
-import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;

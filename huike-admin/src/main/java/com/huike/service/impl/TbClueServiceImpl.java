@@ -5,9 +5,12 @@ import com.huike.common.constant.Constants;
 import com.huike.common.exception.CustomException;
 import com.huike.domain.clues.*;
 import com.huike.domain.clues.dto.ImportResultDTO;
+import com.huike.domain.clues.vo.MailReportVO;
 import com.huike.domain.clues.vo.TbClueExcelVo;
+import com.huike.domain.clues.vo.TbTrackMsgVO;
 import com.huike.domain.system.SysUser;
 import com.huike.mapper.*;
+import com.huike.properties.MsgProperties;
 import com.huike.service.ITbActivityService;
 import com.huike.service.ITbClueService;
 import com.huike.service.ITbRulePoolService;
@@ -17,12 +20,26 @@ import com.huike.utils.HuiKeCrmDateUtils;
 import com.huike.utils.JobUtils;
 import com.huike.utils.StringUtils;
 import com.huike.utils.bean.BeanUtils;
+import com.huike.utils.file.FileUtils;
+import com.huike.utils.redis.RedisCache;
 import com.huike.web.CurrentUserHolder;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.mail.MailProperties;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
+import javax.annotation.Resource;
+import javax.mail.internet.MimeMessage;
+import java.io.File;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -31,32 +48,38 @@ import java.util.stream.Collectors;
 @Service
 public class TbClueServiceImpl implements ITbClueService {
 
-    @Autowired
+    @Resource
     private Rule rule;
 
-    @Autowired
+    @Resource
     private TbClueMapper tbClueMapper;
 
-    @Autowired
+    @Resource
     private TbAssignRecordMapper assignRecordMapper;
 
-    @Autowired
+    @Resource
     private TbClueTrackRecordMapper tbClueTrackRecordMapper;
 
-    @Autowired
+    @Resource
     private SysUserMapper userMapper;
 
-    @Autowired
+    @Resource
     ITbRulePoolService rulePoolService;
 
-    @Autowired
+    @Resource
     SysDictDataMapper sysDictDataMapper;
 
-    @Autowired
+    @Resource
     private TbActivityMapper tbActivityMapper;
 
     @Autowired
     private ITbActivityService activityService;
+    @Resource
+    private RedisCache redisCache;
+    @Resource
+    private JavaMailSender javaMailSender;
+    @Resource
+    private MsgProperties msgProperties;
 
 //	@Autowired
 //	private ITbClueService tbClueService;
@@ -484,4 +507,117 @@ public class TbClueServiceImpl implements ITbClueService {
         }
         return ImportResultDTO.success();
     }
+
+
+    @Override
+    public List<TbClueTrackRecord> selectTbClueTrackList() {
+        List<TbClueTrackRecord> list = tbActivityMapper.selectTbClueTrackList();
+        return list;
+    }
+
+    /**
+     * 跟进线索
+     */
+    @Override
+    public void selectTbClueByStatusAndLatest() {
+        // 查询需要跟进提醒的线索负责人
+        List<TbTrackMsgVO> list = tbActivityMapper.selectTbClueByStatusAndLatest();
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        for (TbTrackMsgVO tbTrackMsgVO : list) {
+            if (redisCache.getCacheValue("clues:clue:msg" + tbTrackMsgVO.getId()) != null) {
+                return;
+            }
+            sendMsg(tbTrackMsgVO, "templates/ClueNotifyTemplate.html", "线索跟踪提醒");
+            redisCache.setCacheObject("clues:clue:msg" + tbTrackMsgVO.getId(), 1, 2, TimeUnit.HOURS);
+
+        }
+
+    }
+
+    @SneakyThrows
+    @Override
+    @Async("threadPoolTaskScheduler")
+    public void sendMsg(TbTrackMsgVO tbTrackMsgVO, String html, String title) {
+        String email = tbTrackMsgVO.getEmail(); //邮箱
+        String real_name = tbTrackMsgVO.getRealName(); //昵称
+        Long id = tbTrackMsgVO.getId(); //线索ID
+        String name = tbTrackMsgVO.getName(); //客户姓名
+        String sex = tbTrackMsgVO.getSex(); //客户性别
+        String phone = tbTrackMsgVO.getPhone();//客户手机号
+
+        String file = this.getClass().getClassLoader().getResource(html).getFile();
+        String text = FileUtils.readFileToString(new File(file), "UTF-8");
+        text = String.format(text, real_name, id, name, phone, sex.equals("0") ? "男" : "女");
+
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, true);
+        messageHelper.setFrom(msgProperties.getUsername());//发件人
+        messageHelper.setTo(email);//收件人
+        //messageHelper.setCc(cc);//抄送人
+        messageHelper.setSubject(title);//主题
+        messageHelper.setText(text, true);//内容
+        javaMailSender.send(mimeMessage);
+
+    }
+
+    @Override
+    public void selectTbBusinessByStatusAndLatest() {
+        List<TbTrackMsgVO> list = tbActivityMapper.selectTbBusinessByStatusAndLatest();
+        if (list == null && list.size() < 1) {
+            return;
+        }
+        for (TbTrackMsgVO tbTrackMsgVO : list) {
+            if (redisCache.getCacheValue("business:business:msg" + tbTrackMsgVO.getId()) != null) {
+                return;
+            }
+            sendMsg(tbTrackMsgVO, "templates/BusinessNotifyTemplate.html", "商机跟踪提醒");
+            redisCache.setCacheObject("business:business:msg" + tbTrackMsgVO.getId(), 1, 2, TimeUnit.HOURS);
+
+        }
+
+    }
+
+    @Autowired
+    private Configuration configuration;
+
+    @Autowired
+    private MailProperties mailProperties;
+
+    @SneakyThrows
+    @Override
+    public void selectThisReportData() {
+        // 统计数据
+        // 日期  线索新增  商机新增  合同新增  销售额
+        List<MailReportVO> reportVOS = tbActivityMapper.selectThisReportData();
+        if (reportVOS == null || reportVOS.isEmpty()) {
+            return;
+        }
+
+        // Java Freemarker
+        // 组装数据
+        Map<String, Object> dataModel = new HashMap<>();
+        dataModel.put("title", "运营数据报告");
+        dataModel.put("adminName", "超级管理员");
+        dataModel.put("dataRows", reportVOS);
+
+        // 获取模板
+        Template template = configuration.getTemplate("mail.ftl");
+        String result = FreeMarkerTemplateUtils.processTemplateIntoString(template, dataModel);
+        System.out.println(result);
+
+        // 发送邮件
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+        mimeMessageHelper.setFrom(mailProperties.getUsername());
+        mimeMessageHelper.setTo("zxjOvO@gmail.com");
+        mimeMessageHelper.setSubject("月度经营报表"); // 设置邮件标题
+
+        mimeMessageHelper.setText(result, true);
+        javaMailSender.send(mimeMessage);
+
+
+    }
+
 }

@@ -4,6 +4,7 @@ import com.huike.domain.system.SysOperLog;
 import com.huike.mapper.SysOperLogMapper;
 import com.huike.service.ISysOperLogService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class SysOperLogServiceImpl implements ISysOperLogService {
      * @param operLog 操作日志对象
      */
     @Override
+    @Async("executor") // 如果不指定线程池，就使用Spring提供的默认的线程池
     public void insertOperlog(SysOperLog operLog) {
         operLogMapper.insertOperlog(operLog);
     }

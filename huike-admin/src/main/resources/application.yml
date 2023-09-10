@@ -2,6 +2,18 @@ server:
   port: 8080
 
 spring:
+  freemarker:
+    cache: false #关闭模板缓存，方便测试
+    settings:
+      template_update_delay: 0 #检查模板更新延迟时间，设置为0表示立即检查，如果时间大于0会有缓存不方便进行模板测试
+  #配置电子邮件信息
+  mail:
+    #    host: smtp.qq.com
+    host: smtp.163.com
+    port: 465
+    username: zxjwithjava@163.com
+    password: NXSZCZDVWEPDOALC
+    protocol: smtps
   profiles:
     active: dev #激活 dev 配置
   messages:

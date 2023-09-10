@@ -77,6 +77,61 @@
         where code = #{code}
     </select>
 
+    <select id="selectTbClueTrackList" resultType="com.huike.domain.clues.TbClueTrackRecord">
+        select *
+        from tb_clue
+        where status = 2
+    </select>
+
+    <!--跟进线索-->
+    <select id="selectTbClueByStatusAndLatest" resultType="com.huike.domain.clues.vo.TbTrackMsgVO">
+        select c.id, c.name, c.phone, c.sex, u.real_name, u.email
+        from tb_clue c,
+             tb_assign_record a,
+             sys_user u
+        where c.id = a.assign_id
+          and a.user_id = u.user_id
+          and c.status = 2
+          and a.latest = 1
+#       and c.next_time between now() and date_add(now(), INTERVAL 2 hour)
+          and c.next_time between date_add(now(), interval 8 hour) and date_add(now(), interval 10 hour)
+    </select>
+
+    <select id="selectTbBusinessByStatusAndLatest" resultType="com.huike.domain.clues.vo.TbTrackMsgVO">
+        select c.id, c.name, c.phone, c.sex, u.real_name, u.email
+        from tb_business c,
+             tb_assign_record a,
+             sys_user u
+        where c.id = a.assign_id
+          and a.user_id = u.user_id
+          and c.status = 2
+          and a.latest = 1
+#       and c.next_time between now() and date_add(now(), INTERVAL 2 hour)
+          and c.next_time between date_add(now(), interval 8 hour) and date_add(now(), interval 10 hour)
+
+
+    </select>
+
+    <!--报表-->
+    <select id="selectThisReportData" resultType="com.huike.domain.clues.vo.MailReportVO">
+        <![CDATA[
+        SELECT DATE(tb_contract.create_time)  AS date,
+               COUNT(DISTINCT tb_contract.id) AS newContractCount,
+               COUNT(DISTINCT tb_clue.id)     AS newClueCount,
+               COUNT(DISTINCT tb_business.id) AS newBusinessCount,
+               SUM(tb_contract.course_price)  AS salesCount
+        FROM tb_contract
+                 LEFT JOIN
+             tb_clue ON DATE(tb_clue.create_time) = DATE(tb_contract.create_time)
+                 LEFT JOIN
+             tb_business ON DATE(tb_business.create_time) = DATE(tb_contract.create_time)
+        WHERE DATE(tb_contract.create_time) >= DATE_ADD(LAST_DAY(CURDATE() - INTERVAL 1 MONTH), INTERVAL 1 DAY)
+          AND DATE(tb_contract.create_time) <= LAST_DAY(CURDATE())
+        GROUP BY DATE(tb_contract.create_time);
+        ]]>
+    </select>
+
+
 
     <insert id="insertTbActivity" parameterType="TbActivity" useGeneratedKeys="true" keyProperty="id">
         insert into tb_activity

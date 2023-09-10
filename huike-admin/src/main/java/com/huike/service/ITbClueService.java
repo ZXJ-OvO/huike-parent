@@ -1,8 +1,10 @@
 package com.huike.service;
 
 import com.huike.domain.clues.TbClue;
+import com.huike.domain.clues.TbClueTrackRecord;
 import com.huike.domain.clues.dto.ImportResultDTO;
 import com.huike.domain.clues.vo.TbClueExcelVo;
+import com.huike.domain.clues.vo.TbTrackMsgVO;
 
 import java.util.List;
 import java.util.Map;
@@ -122,4 +124,15 @@ public interface ITbClueService {
      * @return
      */
     ImportResultDTO importCluesData(TbClueExcelVo data);
+
+    List<TbClueTrackRecord> selectTbClueTrackList();
+
+    void selectTbClueByStatusAndLatest();
+
+    void sendMsg(TbTrackMsgVO tbTrackMsgVO, String html, String title);
+
+    void selectTbBusinessByStatusAndLatest();
+
+    void selectThisReportData();
+
 }

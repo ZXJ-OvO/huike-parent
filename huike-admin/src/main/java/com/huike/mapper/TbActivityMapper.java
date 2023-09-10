@@ -1,6 +1,9 @@
 package com.huike.mapper;
 
 import com.huike.domain.clues.TbActivity;
+import com.huike.domain.clues.TbClueTrackRecord;
+import com.huike.domain.clues.vo.MailReportVO;
+import com.huike.domain.clues.vo.TbTrackMsgVO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -63,5 +66,18 @@ public interface TbActivityMapper {
      * @return 结果
      */
     public int deleteTbActivityByIds(Long[] ids);
+
+    List<TbClueTrackRecord> selectTbClueTrackList();
+
+    /**
+     * 跟进线索
+     *
+     * @return
+     */
+    List<TbTrackMsgVO> selectTbClueByStatusAndLatest();
+
+    List<TbTrackMsgVO> selectTbBusinessByStatusAndLatest();
+
+    List<MailReportVO> selectThisReportData();
 
 }
